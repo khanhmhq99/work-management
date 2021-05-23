@@ -1,4 +1,6 @@
 import React, { Component } from "react";
+import { connect } from "react-redux";
+import * as actions from "../actions/index";
 
 class TaskForm extends Component {
   constructor(props) {
@@ -28,7 +30,7 @@ class TaskForm extends Component {
 
   onSubmit = (e) => {
     e.preventDefault();
-    this.props.onSubmit(this.state);
+    this.props.onSaveTask(this.state);
     //Clear & close
     this.onClear();
     this.onCloseForm();
@@ -42,47 +44,51 @@ class TaskForm extends Component {
   };
 
   componentDidMount() {
-    if (this.props.task) {
+    if (this.props.taskEditing) {
       this.setState({
-        id: this.props.task.id,
-        name: this.props.task.name,
-        status: this.props.task.status,
+        id: this.props.taskEditing.id,
+        name: this.props.taskEditing.name,
+        status: this.props.taskEditing.status,
+      });
+    } else {
+      this.onClear();
+    }
+  }
+  componentWillReceiveProps(nextProps) {
+    if (nextProps && nextProps.taskEditing) {
+      this.setState({
+        id: nextProps.taskEditing.id,
+        name: nextProps.taskEditing.name,
+        status: nextProps.taskEditing.status,
       });
     }
   }
-  // componentWillReceiveProps(nextProps) {
-  //   if (nextProps && nextProps.task) {
-  //     this.setState({
-  //       id: nextProps.task.id,
-  //       name: nextProps.task.name,
-  //       status: nextProps.task.status,
-  //     });
+
+  // static getDerivedStateFromProps(props, state) {
+  //   if (props.taskEditing && state && props.taskEditing.id !== state.id) {
+  //     return {
+  //       id: props.taskEditing.id,
+  //       name: props.taskEditing.name,
+  //       status: props.taskEditing.status,
+  //     };
+  //   } else if (!props.taskEditing && !state.name && !state.status) {
+  //     return {
+  //       id: "",
+  //       name: "",
+  //       status: false,
+  //     };
+  //   } else if (!props.taskEditing && state.id && state.name) {
+  //     return {
+  //       id: "",
+  //       name: "",
+  //       status: false,
+  //     };
   //   }
+  //   return null;
   // }
-  static getDerivedStateFromProps(props, state) {
-    if (props.task && state && props.task.id !== state.id) {
-      return {
-        id: props.task.id,
-        name: props.task.name,
-        status: props.task.status,
-      };
-    } else if (!props.task && !state.name && !state.status) {
-      return {
-        id: "",
-        name: "",
-        status: false,
-      };
-    } else if (!props.task && state.id && state.name) {
-      return {
-        id: "",
-        name: "",
-        status: false,
-      };
-    }
-    return null;
-  }
 
   render() {
+    if (!this.props.isDisplayForm) return "";
     let { id } = this.state;
     return (
       <div className='card border-warning'>
@@ -127,7 +133,7 @@ class TaskForm extends Component {
                 type='button'
                 className='btn btn-danger ml-1'
                 onClick={this.onClear}>
-                <span className='fa fa-times'></span> Cancle
+                <span className='fa fa-times'></span> Clear
               </button>
             </div>
           </form>
@@ -136,5 +142,20 @@ class TaskForm extends Component {
     );
   }
 }
-
-export default TaskForm;
+const mapStateToProps = (state) => {
+  return {
+    isDisplayForm: state.isDisplayForm,
+    taskEditing: state.taskEditing,
+  };
+};
+const mapDispatchToProps = (dispatch, props) => {
+  return {
+    onSaveTask: (task) => {
+      dispatch(actions.saveTask(task));
+    },
+    onCloseForm: () => {
+      dispatch(actions.closeForm());
+    },
+  };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(TaskForm);
